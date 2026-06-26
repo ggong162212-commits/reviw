@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>리뷰 파워블로거 변환기 ✨</title>
+<style>
+  :root{
+    --bg:#0f1020; --card:#1a1b2e; --card2:#232544; --line:#33365e;
+    --txt:#eceeffe6; --sub:#a9add6; --accent:#7c5cff; --accent2:#ff5c9d;
+    --gold:#ffc94d; --ok:#36d39a; --bad:#ff7a7a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Apple SD Gothic Neo','Pretendard',-apple-system,'Malgun Gothic',sans-serif;
+    background:linear-gradient(160deg,#0f1020,#16172e 60%,#1b1330);
+    color:var(--txt); min-height:100vh; line-height:1.6;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:20px 16px 60px;}
+  header{text-align:center; padding:18px 0 8px;}
+  header h1{
+    font-size:26px; margin:0 0 6px; font-weight:800;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  header p{margin:0; color:var(--sub); font-size:14px;}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:18px; margin-top:16px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+  }
+  label{display:block; font-size:13.5px; color:var(--sub); margin:14px 0 6px; font-weight:600;}
+  label:first-child{margin-top:0;}
+  input[type=text], textarea, select{
+    width:100%; background:var(--card2); border:1px solid var(--line); color:var(--txt);
+    border-radius:12px; padding:12px 13px; font-size:15px; font-family:inherit; resize:vertical;
+  }
+  input::placeholder, textarea::placeholder{color:#6f73a0;}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--accent);}
+  .row{display:flex; gap:12px; flex-wrap:wrap;}
+  .row > div{flex:1; min-width:140px;}
+  .hint{font-size:12px; color:#7d80ad; margin-top:5px;}
+
+  /* 별점 */
+  .stars{display:flex; gap:4px; font-size:34px; cursor:pointer; user-select:none;}
+  .stars span{color:#3a3d63; transition:transform .08s;}
+  .stars span.on{color:var(--gold);}
+  .stars span:active{transform:scale(1.2);}
+  .starval{font-size:13px; color:var(--sub); margin-left:8px;}
+
+  /* 칩 선택 */
+  .chips{display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{
+    border:1px solid var(--line); background:var(--card2); color:var(--sub);
+    padding:8px 13px; border-radius:999px; font-size:13.5px; cursor:pointer; transition:.15s;
+  }
+  .chip.sel{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; border-color:transparent; font-weight:600;}
+
+  .btn{
+    width:100%; margin-top:20px; padding:15px; border:none; border-radius:14px;
+    font-size:16px; font-weight:800; cursor:pointer; color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    box-shadow:0 8px 24px rgba(124,92,255,.35);
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn.ghost{background:var(--card2); color:var(--txt); box-shadow:none; border:1px solid var(--line);}
+
+  /* 결과 */
+  #out{white-space:pre-wrap; word-break:break-word; font-size:15px; line-height:1.85;}
+  .outhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .outhead h2{font-size:18px; margin:0;}
+  .actions{display:flex; gap:8px;}
+  .actions button{
+    border:1px solid var(--line); background:var(--card2); color:var(--txt);
+    padding:8px 14px; border-radius:10px; font-size:13.5px; cursor:pointer; font-weight:600;
+  }
+  .actions button:active{transform:translateY(1px);}
+  .hidden{display:none;}
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+    background:var(--ok); color:#04231a; padding:11px 20px; border-radius:999px; font-weight:700;
+    opacity:0; transition:.25s; pointer-events:none; font-size:14px;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  footer{text-align:center; color:#5b5e88; font-size:12px; margin-top:26px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>리뷰 파워블로거 변환기 ✨</h1>
+    <p>별점·장단점·총평만 적으면 → 블로거 감성 리뷰로 변신</p>
+  </header>
+
+  <!-- 입력 -->
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>상품명</label>
+        <input type="text" id="product" placeholder="예) 오버핏 후드티, 수분 크림" />
+      </div>
+      <div>
+        <label>카테고리</label>
+        <select id="category">
+          <option value="">선택 안 함</option>
+          <option>패션/의류</option>
+          <option>뷰티/화장품</option>
+          <option>식품/간식</option>
+          <option>전자기기/가전</option>
+          <option>생활/주방용품</option>
+          <option>잡화/액세서리</option>
+        </select>
+      </div>
+    </div>
+
+    <label>별점</label>
+    <div class="stars" id="stars">
+      <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span>
+      <span data-v="4">★</span><span data-v="5">★</span>
+      <span class="starval" id="starval">5.0점</span>
+    </div>
+
+    <label>👍 장점 <span style="color:#6f73a0;font-weight:400">(줄바꿈 또는 , 로 여러 개)</span></label>
+    <textarea id="pros" rows="3" placeholder="예) 색감 예쁨, 도톰해서 따뜻함, 핏이 안 부해요"></textarea>
+
+    <label>👎 단점 <span style="color:#6f73a0;font-weight:400">(없으면 비워두기)</span></label>
+    <textarea id="cons" rows="2" placeholder="예) 배송 조금 느림, 끈 길이가 짧아요"></textarea>
+
+    <label>📝 총평 <span style="color:#6f73a0;font-weight:400">(한 줄 느낌만 적어도 OK)</span></label>
+    <textarea id="summary" rows="2" placeholder="예) 가격 대비 만족, 재구매 의사 있음"></textarea>
+
+    <label>플랫폼</label>
+    <div class="chips" id="platforms">
+      <div class="chip sel" data-v="에이블리">에이블리</div>
+      <div class="chip" data-v="쿠팡">쿠팡</div>
+      <div class="chip" data-v="무신사">무신사</div>
+      <div class="chip" data-v="네이버">네이버</div>
+      <div class="chip" data-v="올리브영">올리브영</div>
+      <div class="chip" data-v="">기타</div>
+    </div>
+
+    <label>말투 / 톤</label>
+    <div class="chips" id="tones">
+      <div class="chip sel" data-v="emotional">감성 충만 🌸</div>
+      <div class="chip" data-v="friendly">친근 발랄 😆</div>
+      <div class="chip" data-v="info">정보 꼼꼼 🔍</div>
+      <div class="chip" data-v="honest">솔직 담백 ✌️</div>
+    </div>
+
+    <button class="btn" id="gen">✨ 파워블로거 리뷰로 변환</button>
+  </div>
+
+  <!-- 결과 -->
+  <div class="card hidden" id="resultCard">
+    <div class="outhead">
+      <h2>완성된 리뷰 💜</h2>
+      <div class="actions">
+        <button id="regen">🔄 다시</button>
+        <button id="copy">📋 복사</button>
+      </div>
+    </div>
+    <div id="out"></div>
+  </div>
+
+  <footer>입력한 내용은 어디에도 저장·전송되지 않아요 · 100% 내 브라우저에서 처리</footer>
+</div>
+
+<div class="toast" id="toast">복사 완료!</div>
+
+<script>
+/* ---------- 상태 ---------- */
+let rating = 5;
+let platform = "에이블리";
+let tone = "emotional";
+
+/* ---------- 별점 ---------- */
+const starEls = [...document.querySelectorAll('#stars span[data-v]')];
+const starval = document.getElementById('starval');
+function paintStars(v){
+  starEls.forEach(s=> s.classList.toggle('on', +s.dataset.v <= v));
+  starval.textContent = v.toFixed(1)+'점';
+}
+starEls.forEach(s=>{
+  s.addEventListener('click', ()=>{ rating = +s.dataset.v; paintStars(rating); });
+});
+paintStars(rating);
+
+/* ---------- 칩 ---------- */
+function bindChips(id, cb){
+  const box = document.getElementById(id);
+  box.addEventListener('click', e=>{
+    const chip = e.target.closest('.chip'); if(!chip) return;
+    [...box.children].forEach(c=>c.classList.remove('sel'));
+    chip.classList.add('sel'); cb(chip.dataset.v);
+  });
+}
+bindChips('platforms', v=> platform = v);
+bindChips('tones', v=> tone = v);
+
+/* ---------- 유틸 ---------- */
+function splitList(text){
+  return text.split(/[\n,·]+/).map(s=>s.trim()).filter(Boolean);
+}
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]); }
+
+/* 평점 별 텍스트 막대 */
+function starBar(v){
+  return '⭐'.repeat(v) + '☆'.repeat(5-v) + `  (${v.toFixed(1)} / 5.0)`;
+}
+
+/* 카테고리/플랫폼 해시태그 */
+const tagBank = {
+  '패션/의류':['#데일리룩','#코디추천','#가성비패션','#옷스타그램'],
+  '뷰티/화장품':['#뷰티템','#화장품추천','#내돈내산뷰티','#데일리메이크업'],
+  '식품/간식':['#먹스타그램','#존맛탱','#간식추천','#내돈내산'],
+  '전자기기/가전':['#가전추천','#잇템','#가성비템','#리뷰'],
+  '생활/주방용품':['#살림템','#주방템','#생활꿀템','#자취필수템'],
+  '잡화/액세서리':['#데일리템','#꾸안꾸','#잇아이템','#소품샵'],
+  '':['#내돈내산','#솔직리뷰','#추천템','#리뷰스타그램']
+};
+
+/* ---------- 톤별 문구 풀 ---------- */
+const T = {
+  emotional:{
+    open: r=>[
+      `요즘 제 마음을 완전히 사로잡은 아이템이 생겨서 살포시 가져와봤어요 🥰`,
+      `한참을 고민하다 데려왔는데, 이게 웬걸 신세계더라구요 ✨`,
+      `오랜만에 "찐"으로 만족한 쇼핑이라 두근거리는 마음으로 적어봅니다 💕`
+    ],
+    prosLead:['제가 반해버린 포인트들 살짝 풀어볼게요 👇','이 부분에서 마음이 사르르 녹았어요 🫶','솔직히 이래서 좋았어요 👇'],
+    consLead:['아주 작은 아쉬움도 솔직하게 남겨둘게요 🥲','완벽하진 않았던 부분도 살짝쿵 🙈','이건 참고하시면 좋을 것 같아요 🍃'],
+    closeHigh:['두말 없이 재구매각이에요. 망설이는 분들 어서 데려가세요 💗','오랜만에 인생템 등극! 진심 강추드려요 🌟'],
+    closeMid:['소소한 아쉬움은 있지만 그래도 정 들어버린 아이템이에요 🌷','완벽하진 않아도 충분히 사랑스러운 선택이었어요 💞'],
+    closeLow:['기대가 컸던 만큼 아쉬움이 남는 솔직 후기예요 🥀','다음을 기약하며… 그래도 솔직하게 남겨봅니다 🍂']
+  },
+  friendly:{
+    open: r=>[
+      `얘들아 이거 진짜 물건이야!! 빨리 알려주고 싶어서 후다닥 왔어 😆`,
+      `나 또 영업하러 왔다… 이번 건 진짜 안 사면 손해라구! 🙌`,
+      `두구두구 오늘의 내돈내산 후기 가보자고~! 🎉`
+    ],
+    prosLead:['일단 좋았던 거 쭉 풀어볼게! 👇','이래서 내가 좋아함 ㅋㅋ 👇','자 장점 타임! 🥳'],
+    consLead:['근데 솔직히 이건 좀 아쉬웠어 🥲','단점도 까놓고 말할게! 😅','이건 알고 사면 좋아 👀'],
+    closeHigh:['결론: 무조건 사! 후회 1도 없음 ㅇㅈ? 👍👍','이건 진짜 강추! 장바구니 ㄱㄱ 🛒'],
+    closeMid:['단점 감안해도 난 만족! 살 만해 ㅎㅎ 👌','호불호 갈릴 수 있지만 난 굿이었어 😎'],
+    closeLow:['음… 난 좀 별로였어 ㅠ 신중하게 골라봐! 🥲','기대만큼은 아니었다는 솔직 후기! 참고해~ 🙏']
+  },
+  info:{
+    open: r=>[
+      `구매 전 정보 찾으시는 분들을 위해 최대한 자세히 정리해봤습니다.`,
+      `장단점을 객관적으로 정리한 내돈내산 상세 후기입니다.`,
+      `실사용 기준으로 꼼꼼하게 따져본 리뷰 시작합니다.`
+    ],
+    prosLead:['[장점]','✅ 좋았던 점','▶ 만족스러운 부분'],
+    consLead:['[단점]','⚠️ 아쉬운 점','▶ 참고할 부분'],
+    closeHigh:['종합적으로 만족도가 높아 재구매 및 추천 의사 있습니다.','가격·품질·만족도 모든 면에서 합격점입니다. 추천드립니다.'],
+    closeMid:['단점을 감안하더라도 전반적인 만족도는 무난한 편입니다.','특정 단점이 크게 걸리지 않는다면 충분히 고려할 만합니다.'],
+    closeLow:['장점 대비 단점이 다소 큰 편이라 신중한 선택을 권합니다.','개인적으로는 기대치에 미치지 못한 결과였습니다.']
+  },
+  honest:{
+    open: r=>[
+      `광고 1도 없는 내돈내산이라 가감 없이 적어봅니다.`,
+      `좋은 건 좋다, 아쉬운 건 아쉽다 솔직하게 갑니다.`,
+      `포장 없이 팩트만 정리한 솔직 후기예요.`
+    ],
+    prosLead:['좋았던 점부터.','장점은 이렇습니다.','만족한 부분 먼저.'],
+    consLead:['단점도 숨기지 않을게요.','아쉬운 점은 분명히 있습니다.','이건 솔직히 별로였어요.'],
+    closeHigh:['결론, 돈값 합니다. 추천이요.','과장 없이 만족스러운 제품이었습니다. 재구매 의향 있어요.'],
+    closeMid:['단점 알고 사면 후회는 없을 듯합니다.','딱 가격만큼 합니다. 호불호는 갈릴 수 있어요.'],
+    closeLow:['솔직히 추천은 못 하겠습니다.','이 가격이면 다른 선택지를 더 보시길.']
+  }
+};
+
+/* ---------- 리뷰 생성 ---------- */
+function generate(){
+  const product = document.getElementById('product').value.trim();
+  const category = document.getElementById('category').value;
+  const pros = splitList(document.getElementById('pros').value);
+  const cons = splitList(document.getElementById('cons').value);
+  const summary = document.getElementById('summary').value.trim();
+  const t = T[tone];
+
+  const name = product || '이 제품';
+  let L = [];
+
+  /* 제목 라인 */
+  const titleEmoji = rating>=4?'💖':rating>=3?'🙂':'🤔';
+  L.push(`${titleEmoji} ${name} 솔직 후기 ${titleEmoji}`);
+  if(platform) L.push(`(${platform} 내돈내산)`);
+  L.push('');
+
+  /* 별점 막대 */
+  L.push(starBar(rating));
+  L.push('');
+
+  /* 오프닝 */
+  L.push(pick(t.open(rating)));
+  if(category) {
+    const catLine = {
+      emotional:`${category} 좋아하는 분들이라면 분명 공감하실 거예요 🫶`,
+      friendly:`${category} 덕후라면 이건 봐야 해! 👀`,
+      info:`${category} 카테고리 구매를 고민 중이라면 참고하세요.`,
+      honest:`${category} 쪽으로 비교 많이 해보고 고른 제품입니다.`
+    }[tone];
+    L.push(catLine);
+  }
+  L.push('');
+
+  /* 장점 */
+  if(pros.length){
+    L.push(pick(t.prosLead));
+    const decoP = ['😍','🥰','👏','✨','💯','🔥','🙆‍♀️','💖'];
+    shuffle([...pros]).slice(0,8).forEach((p,i)=>{
+      const e = tone==='info'||tone==='honest' ? '·' : decoP[i%decoP.length];
+      L.push(`${e} ${p}`);
+    });
+    L.push('');
+  }
+
+  /* 단점 */
+  if(cons.length){
+    L.push(pick(t.consLead));
+    cons.slice(0,6).forEach(c=>{
+      const e = tone==='info'||tone==='honest' ? '·' : '🥲';
+      L.push(`${e} ${c}`);
+    });
+    L.push('');
+  }
+
+  /* 총평 */
+  if(summary){
+    const lead = {emotional:'💭 제 솔직한 마음은요,',friendly:'💬 총평하자면!',info:'📌 총평',honest:'➡️ 총평'}[tone];
+    L.push(lead);
+    L.push(summary);
+    L.push('');
+  }
+
+  /* 마무리 */
+  const close = rating>=4 ? pick(t.closeHigh) : rating>=3 ? pick(t.closeMid) : pick(t.closeLow);
+  L.push(close);
+  L.push('');
+
+  /* 별점 요약 한 줄 */
+  const verdict = rating>=4?'강력 추천 ⭐':rating>=3?'무난 추천 👍':'신중 구매 🤏';
+  L.push(`✔ 한 줄 평: ${rating.toFixed(1)}점 / ${verdict}`);
+  L.push('');
+
+  /* 해시태그 */
+  let tags = [...(tagBank[category]||tagBank[''])];
+  if(product) tags.unshift('#'+product.replace(/\s+/g,''));
+  if(platform) tags.push('#'+platform);
+  L.push(shuffle(tags).slice(0,6).join(' '));
+
+  return L.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+/* ---------- 이벤트 ---------- */
+const out = document.getElementById('out');
+const resultCard = document.getElementById('resultCard');
+
+function run(){
+  const pros = document.getElementById('pros').value.trim();
+  const summary = document.getElementById('summary').value.trim();
+  if(!pros && !summary){
+    toast('장점이나 총평을 입력해 주세요 🙏', true);
+    return;
+  }
+  out.textContent = generate();
+  resultCard.classList.remove('hidden');
+  resultCard.scrollIntoView({behavior:'smooth', block:'start'});
+}
+document.getElementById('gen').addEventListener('click', run);
+document.getElementById('regen').addEventListener('click', ()=> out.textContent = generate());
+
+document.getElementById('copy').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(out.textContent); toast('복사 완료! 붙여넣기 하세요 📋'); }
+  catch{
+    const r=document.createRange(); r.selectNode(out);
+    getSelection().removeAllRanges(); getSelection().addRange(r);
+    document.execCommand('copy'); getSelection().removeAllRanges();
+    toast('복사 완료! 📋');
+  }
+});
+
+/* ---------- 토스트 ---------- */
+const toastEl = document.getElementById('toast');
+let toastTimer;
+function toast(msg, warn){
+  toastEl.textContent = msg;
+  toastEl.style.background = warn ? '#ff7a7a' : '#36d39a';
+  toastEl.style.color = warn ? '#2a0606' : '#04231a';
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 1900);
+}
+</script>
+</body>
+</html>
